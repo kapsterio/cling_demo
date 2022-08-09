@@ -7,7 +7,6 @@ import uk.co.caprica.vlcj.media.MediaEventAdapter;
 import uk.co.caprica.vlcj.media.MediaParsedStatus;
 import uk.co.caprica.vlcj.media.MediaRef;
 import uk.co.caprica.vlcj.media.Meta;
-import uk.co.caprica.vlcj.media.Picture;
 import uk.co.caprica.vlcj.player.base.State;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import uk.co.caprica.vlcj.player.embedded.videosurface.VideoSurface;
@@ -18,13 +17,14 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class MediaPlayerController {
-    private static MediaPlayerController mediaPlayerController;
 
     private final EmbeddedMediaPlayer mediaPlayerComponent;
 
     private final JFrame frame;
+    private final MediaPlayerStateChangeListener listener;
 
-    public MediaPlayerController() {
+    public MediaPlayerController(MediaPlayerStateChangeListener listener) {
+        this.listener = listener;
         frame = new JFrame("demo media player");
         frame.setBounds(100, 100, 600, 400);
 
@@ -52,12 +52,24 @@ public class MediaPlayerController {
         window.setVisible(true);
     }
 
-    public void play(String uri) {
-        mediaPlayerComponent.media().play(uri);
+    public void play() {
+        mediaPlayerComponent.controls().play();
     };
 
+    public void pause() {
+        mediaPlayerComponent.controls().pause();
+    }
+
+    public void stop() {
+        mediaPlayerComponent.controls().stop();
+    }
+
+    public void seek(long tsInMs) {
+        mediaPlayerComponent.controls().setTime(tsInMs);
+    }
+
     public void prepare(String uri) {
-        mediaPlayerComponent.media().prepare(uri);
+        mediaPlayerComponent.media().play(uri);
         mediaPlayerComponent.media().parsing().parse();
         mediaPlayerComponent.events().addMediaEventListener(new MediaEventAdapter() {
             @Override
@@ -66,12 +78,9 @@ public class MediaPlayerController {
             }
 
             @Override
-            public void mediaSubItemAdded(Media media, MediaRef newChild) {
-            }
-
-            @Override
             public void mediaDurationChanged(Media media, long newDuration) {
                 System.out.println("duration changed " + newDuration);
+                listener.onDurationKnow(newDuration);
             }
 
             @Override
@@ -88,20 +97,8 @@ public class MediaPlayerController {
             public void mediaStateChanged(Media media, State newState) {
                 System.out.println("state changed" + newState);
             }
-
-            @Override
-            public void mediaSubItemTreeAdded(Media media, MediaRef item) {
-            }
-
-            @Override
-            public void mediaThumbnailGenerated(Media media, Picture picture) {
-                System.out.println("thumbnail" + picture.toString());
-            }
         });
     }
 
-    public static void main(String[] args) {
-        mediaPlayerController = new MediaPlayerController();
-    }
 
 }
