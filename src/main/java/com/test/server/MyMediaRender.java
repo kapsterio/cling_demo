@@ -26,6 +26,9 @@ import org.fourthline.cling.support.lastchange.LastChangeParser;
 import org.fourthline.cling.transport.spi.DatagramProcessor;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MyMediaRender implements Runnable {
     private  LocalDevice createDevice()
@@ -37,8 +40,9 @@ public class MyMediaRender implements Runnable {
 
         System.out.println(identity);
 
+        //it does matter to specify DeviceType to `MediaRenderer`, or some apps will fail to cast (they only search for MediaRenderer)
         DeviceType type =
-                new UDADeviceType("MediaRender", 1);
+                new UDADeviceType("MediaRenderer", 1);
 
         DeviceDetails details =
                 new DeviceDetails(
@@ -151,6 +155,11 @@ public class MyMediaRender implements Runnable {
 
             final UpnpService upnpService = new UpnpServiceImpl(new DefaultUpnpServiceConfiguration() {
                 @Override
+                public int getAliveIntervalMillis() {
+                    return 5000;
+                }
+
+                @Override
                 public DatagramProcessor getDatagramProcessor() {
                     return new MyDatagramProcessorImpl();
                 }
@@ -164,15 +173,29 @@ public class MyMediaRender implements Runnable {
                 }
             });
 
+            LocalDevice device = createDevice();
             // Add the bound local device to the registry
-            upnpService.getRegistry().addDevice(
-                    createDevice()
-            );
+            upnpService.getRegistry().addDevice(device);
+
+            scheduleFireLastChangeEvent(Executors.newSingleThreadScheduledExecutor(), device);
 
         } catch (Exception ex) {
             System.err.println("Exception occured: " + ex);
             ex.printStackTrace(System.err);
             System.exit(1);
         }
+    }
+
+
+    private void scheduleFireLastChangeEvent(ScheduledExecutorService executorService, LocalDevice device) {
+        executorService.scheduleAtFixedRate(() -> {
+            LocalService[] services = device.getServices();
+            for (LocalService service : services) {
+                if (service.getManager() instanceof  LastChangeAwareServiceManager) {
+                    LastChangeAwareServiceManager manager = (LastChangeAwareServiceManager)service.getManager();
+                    manager.fireLastChange();
+                }
+            }
+        }, 0L, 1L, TimeUnit.SECONDS);
     }
 }

@@ -30,8 +30,7 @@ public class MyDatagramProcessorImpl implements DatagramProcessor {
                 log.finer(new String(datagram.getData(), "UTF-8"));
                 log.finer("-===================================== DATAGRAM END =============================================");
             }
-
-            System.out.println("read datagram" + new String(datagram.getData(), "UTF-8"));
+            System.out.println("read datagram: " + new String(datagram.getData(), "UTF-8"));
 
             ByteArrayInputStream is = new ByteArrayInputStream(datagram.getData());
 

@@ -34,7 +34,7 @@ public class MyAVTransportService extends AbstractAVTransportService {
     private TransportStatus status;
     private String speed;
 
-    private PlayMode playMode;
+    private PlayMode playMode = PlayMode.NORMAL;
 
 
     private MediaPlayerStateChangeListener listener;
@@ -124,7 +124,7 @@ public class MyAVTransportService extends AbstractAVTransportService {
     @Override
     public DeviceCapabilities getDeviceCapabilities(UnsignedIntegerFourBytes instanceId) throws AVTransportException {
         System.out.println("get device capabilities...");
-        return null;
+        return new DeviceCapabilities(new StorageMedium[]{StorageMedium.NETWORK});
     }
 
     @Override
