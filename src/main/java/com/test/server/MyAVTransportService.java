@@ -94,11 +94,6 @@ public class MyAVTransportService extends AbstractAVTransportService {
             public void onStop() {
 
             }
-
-            @Override
-            public void onSeek(long time) {
-
-            }
         };
         mediaPlayer = new MediaPlayerController(listener);
         mediaPlayer.prepare(uri);

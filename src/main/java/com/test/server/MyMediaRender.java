@@ -1,9 +1,11 @@
 package com.test.server;
 
+import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceImpl;
 import org.fourthline.cling.binding.LocalServiceBindingException;
 import org.fourthline.cling.binding.annotations.AnnotationLocalServiceBinder;
+import org.fourthline.cling.model.DefaultServiceManager;
 import org.fourthline.cling.model.ValidationException;
 import org.fourthline.cling.model.meta.DeviceDetails;
 import org.fourthline.cling.model.meta.DeviceIdentity;
@@ -18,8 +20,10 @@ import org.fourthline.cling.model.types.UDN;
 import org.fourthline.cling.registry.Registry;
 import org.fourthline.cling.registry.RegistryListener;
 import org.fourthline.cling.support.avtransport.lastchange.AVTransportLastChangeParser;
+import org.fourthline.cling.support.connectionmanager.ConnectionManagerService;
 import org.fourthline.cling.support.lastchange.LastChangeAwareServiceManager;
 import org.fourthline.cling.support.lastchange.LastChangeParser;
+import org.fourthline.cling.transport.spi.DatagramProcessor;
 
 import java.io.IOException;
 
@@ -62,15 +66,24 @@ public class MyMediaRender implements Runnable {
                 }
         );
 
-        return new LocalDevice(identity, type, details, service);
+        LocalService<ConnectionManagerService> connectionManagerService =
+                new AnnotationLocalServiceBinder().read(ConnectionManagerService.class);
+        connectionManagerService.setManager(new DefaultServiceManager<>(connectionManagerService,
+                ConnectionManagerService.class));
+
+        return new LocalDevice(identity, type, details, new LocalService[] {connectionManagerService, service});
     }
 
 
     public static void main(String[] args) throws Exception {
+        System.out.println("file name" + System.getProperty("java.util.logging.config.file"));
         // Start a user thread that runs the UPnP stack
         Thread serverThread = new Thread(new MyMediaRender());
         serverThread.setDaemon(false);
         serverThread.start();
+
+        System.out.println("file name" + System.getProperty("java.util.logging.config.file"));
+
     }
 
     public void run() {
@@ -136,7 +149,13 @@ public class MyMediaRender implements Runnable {
                 }
             };
 
-            final UpnpService upnpService = new UpnpServiceImpl(listener);
+            final UpnpService upnpService = new UpnpServiceImpl(new DefaultUpnpServiceConfiguration() {
+                @Override
+                public DatagramProcessor getDatagramProcessor() {
+                    return new MyDatagramProcessorImpl();
+                }
+
+            }, listener);
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
