@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "http://4thline.org/m2/"
+        allowInsecureProtocol true
+    }
+}
+
+dependencies {
+    implementation group: 'uk.co.caprica', name: 'vlcj', version: '4.4.4'
+    implementation group: 'org.fourthline.cling', name: 'cling-core', version: '2.1.2'
+    implementation group: 'org.fourthline.cling', name: 'cling-support', version: '2.1.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
