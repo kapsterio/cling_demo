@@ -23,6 +23,7 @@ import org.fourthline.cling.support.avtransport.lastchange.AVTransportLastChange
 import org.fourthline.cling.support.connectionmanager.ConnectionManagerService;
 import org.fourthline.cling.support.lastchange.LastChangeAwareServiceManager;
 import org.fourthline.cling.support.lastchange.LastChangeParser;
+import org.fourthline.cling.transport.impl.DatagramProcessorImpl;
 import org.fourthline.cling.transport.spi.DatagramProcessor;
 
 import java.io.IOException;
@@ -117,9 +118,9 @@ public class MyMediaRender implements Runnable {
                 }
 
                 public void remoteDeviceUpdated(Registry registry, RemoteDevice device) {
-                    System.out.println(
-                            "Remote device updated: " + device.getDisplayString()
-                    );
+//                    System.out.println(
+//                            "Remote device updated: " + device.getDisplayString()
+//                    );
                 }
 
                 public void remoteDeviceRemoved(Registry registry, RemoteDevice device) {
@@ -161,7 +162,7 @@ public class MyMediaRender implements Runnable {
 
                 @Override
                 public DatagramProcessor getDatagramProcessor() {
-                    return new MyDatagramProcessorImpl();
+                    return new DatagramProcessorImpl();
                 }
 
             }, listener);
