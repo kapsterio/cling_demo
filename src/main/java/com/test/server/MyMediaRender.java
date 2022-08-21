@@ -14,6 +14,8 @@ import org.fourthline.cling.model.meta.LocalService;
 import org.fourthline.cling.model.meta.ManufacturerDetails;
 import org.fourthline.cling.model.meta.ModelDetails;
 import org.fourthline.cling.model.meta.RemoteDevice;
+import org.fourthline.cling.model.types.DLNACaps;
+import org.fourthline.cling.model.types.DLNADoc;
 import org.fourthline.cling.model.types.DeviceType;
 import org.fourthline.cling.model.types.UDADeviceType;
 import org.fourthline.cling.model.types.UDN;
@@ -23,6 +25,8 @@ import org.fourthline.cling.support.avtransport.lastchange.AVTransportLastChange
 import org.fourthline.cling.support.connectionmanager.ConnectionManagerService;
 import org.fourthline.cling.support.lastchange.LastChangeAwareServiceManager;
 import org.fourthline.cling.support.lastchange.LastChangeParser;
+import org.fourthline.cling.support.renderingcontrol.AbstractAudioRenderingControl;
+import org.fourthline.cling.support.renderingcontrol.lastchange.RenderingControlLastChangeParser;
 import org.fourthline.cling.transport.impl.DatagramProcessorImpl;
 import org.fourthline.cling.transport.spi.DatagramProcessor;
 
@@ -53,7 +57,9 @@ public class MyMediaRender implements Runnable {
                                 "MediaRender2000",
                                 "A demo media render",
                                 "v1"
-                        )
+                        ),
+                        new DLNADoc[]{new DLNADoc("DMR", DLNADoc.Version.V1_5)},
+                        new DLNACaps(new String[] { "av-upload", "image-upload", "audio-upload" })
                 );
 
 
@@ -76,7 +82,18 @@ public class MyMediaRender implements Runnable {
         connectionManagerService.setManager(new DefaultServiceManager<>(connectionManagerService,
                 ConnectionManagerService.class));
 
-        return new LocalDevice(identity, type, details, new LocalService[] {connectionManagerService, service});
+        LocalService<MyRenderingControlService> renderingControlLocalService =
+                new AnnotationLocalServiceBinder().read(MyRenderingControlService.class);
+        renderingControlLocalService.setManager(
+                new LastChangeAwareServiceManager<MyRenderingControlService>(renderingControlLocalService, lastChangeParser) {
+                    @Override
+                    protected MyRenderingControlService createServiceInstance() throws Exception {
+                        return new MyRenderingControlService();
+                    }
+                }
+        );
+
+        return new LocalDevice(identity, type, details, new LocalService[] {connectionManagerService, service, renderingControlLocalService});
     }
 
 
@@ -157,12 +174,12 @@ public class MyMediaRender implements Runnable {
             final UpnpService upnpService = new UpnpServiceImpl(new DefaultUpnpServiceConfiguration() {
                 @Override
                 public int getAliveIntervalMillis() {
-                    return 5000;
+                    return 0;
                 }
 
                 @Override
                 public DatagramProcessor getDatagramProcessor() {
-                    return new DatagramProcessorImpl();
+                    return new MyDatagramProcessorImpl();
                 }
 
             }, listener);

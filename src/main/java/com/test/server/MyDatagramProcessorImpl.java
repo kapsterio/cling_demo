@@ -81,6 +81,8 @@ public class MyDatagramProcessorImpl implements DatagramProcessor {
             log.finer(messageData.toString().substring(0, messageData.length() - 2)); // Don't print the blank lines
             log.finer("---------------------------------------------------------------------------------");
         }
+        System.out.println("write response: " + messageData.toString());
+
 
         try {
             // According to HTTP 1.0 RFC, headers and their values are US-ASCII
