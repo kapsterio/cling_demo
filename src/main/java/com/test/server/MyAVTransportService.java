@@ -34,8 +34,10 @@ public class MyAVTransportService extends AbstractAVTransportService {
     private TransportStatus status;
     private String speed;
 
-    private PlayMode playMode;
+    private PlayMode playMode = PlayMode.NORMAL;
 
+
+    private MediaPlayerStateChangeListener listener;
     private MediaPlayerController mediaPlayer;
 
     public MyAVTransportService() {
@@ -65,7 +67,35 @@ public class MyAVTransportService extends AbstractAVTransportService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        mediaPlayer = new MediaPlayerController();
+
+        listener = new MediaPlayerStateChangeListener() {
+            @Override
+            public void onDurationKnow(long durationInMs) {
+                long durationInSecond = durationInMs / 1000;
+                long hour = durationInSecond / 3600;
+                long minutes = durationInSecond % 3600 / 60;
+                long second = durationInSecond % 60;
+
+                duration = String.format("%d:%02d:%02d", hour, minutes, second);
+                System.out.println("duration " + duration);
+            }
+
+            @Override
+            public void onPlay() {
+
+            }
+
+            @Override
+            public void onPause() {
+
+            }
+
+            @Override
+            public void onStop() {
+
+            }
+        };
+        mediaPlayer = new MediaPlayerController(listener);
         mediaPlayer.prepare(uri);
     }
 
@@ -94,7 +124,7 @@ public class MyAVTransportService extends AbstractAVTransportService {
     @Override
     public DeviceCapabilities getDeviceCapabilities(UnsignedIntegerFourBytes instanceId) throws AVTransportException {
         System.out.println("get device capabilities...");
-        return null;
+        return new DeviceCapabilities(new StorageMedium[]{StorageMedium.NETWORK});
     }
 
     @Override
@@ -106,19 +136,21 @@ public class MyAVTransportService extends AbstractAVTransportService {
     @Override
     public void stop(UnsignedIntegerFourBytes instanceId) throws AVTransportException {
         this.state = TransportState.STOPPED;
+        this.mediaPlayer.stop();
         System.out.println("media  stopped.");
     }
 
     @Override
     public void play(UnsignedIntegerFourBytes instanceId, String speed) throws AVTransportException {
         this.state = TransportState.PLAYING;
-        this.mediaPlayer.play(uri);
+        this.mediaPlayer.play();
         System.out.println("begin to play....");
     }
 
     @Override
     public void pause(UnsignedIntegerFourBytes instanceId) throws AVTransportException {
         this.state = TransportState.PAUSED_PLAYBACK;
+        this.mediaPlayer.pause();
         System.out.println("media paused ...");
     }
 
@@ -134,6 +166,13 @@ public class MyAVTransportService extends AbstractAVTransportService {
         this.relativeTimePosition = target;
         this.absoluteTimePosition = target;
         this.state = TransportState.TRANSITIONING;
+
+        String[] arr = target.split(":");
+        int hour = Integer.parseInt(arr[0]);
+        int minutes = Integer.parseInt(arr[1]);
+        int seconds = Integer.parseInt(arr[2]);
+        long timeInMs = (hour * 3600L + minutes * 60L + seconds) * 1000;
+        this.mediaPlayer.seek(timeInMs);
     }
 
     @Override

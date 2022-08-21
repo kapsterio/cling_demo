@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     implementation group: 'uk.co.caprica', name: 'vlcj', version: '4.4.4'
+    implementation group: 'uk.co.caprica', name: 'vlcj-javafx', version: '1.1.0'
     implementation group: 'org.fourthline.cling', name: 'cling-core', version: '2.1.2'
     implementation group: 'org.fourthline.cling', name: 'cling-support', version: '2.1.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
