@@ -30,7 +30,7 @@ public class MyDatagramProcessorImpl implements DatagramProcessor {
                 log.finer(new String(datagram.getData(), "UTF-8"));
                 log.finer("-===================================== DATAGRAM END =============================================");
             }
-            System.out.println("read datagram: " + new String(datagram.getData(), "UTF-8"));
+//            System.out.println("read datagram: " + new String(datagram.getData(), "UTF-8"));
 
             ByteArrayInputStream is = new ByteArrayInputStream(datagram.getData());
 
@@ -81,7 +81,7 @@ public class MyDatagramProcessorImpl implements DatagramProcessor {
             log.finer(messageData.toString().substring(0, messageData.length() - 2)); // Don't print the blank lines
             log.finer("---------------------------------------------------------------------------------");
         }
-        System.out.println("write response: " + messageData.toString());
+//        System.out.println("write response: " + messageData.toString());
 
 
         try {
