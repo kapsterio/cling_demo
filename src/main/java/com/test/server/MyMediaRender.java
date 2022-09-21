@@ -6,6 +6,8 @@ import org.fourthline.cling.UpnpServiceImpl;
 import org.fourthline.cling.binding.LocalServiceBindingException;
 import org.fourthline.cling.binding.annotations.AnnotationLocalServiceBinder;
 import org.fourthline.cling.controlpoint.ActionCallback;
+import org.fourthline.cling.binding.xml.DeviceDescriptorBinder;
+import org.fourthline.cling.binding.xml.NvaUDA10DeviceDescriptorBinderImpl;
 import org.fourthline.cling.model.DefaultServiceManager;
 import org.fourthline.cling.model.ValidationException;
 import org.fourthline.cling.model.action.ActionInvocation;
@@ -78,13 +80,16 @@ public class MyMediaRender implements Runnable {
 
         DeviceDetails details =
                 new DeviceDetails(
-                        "My First Media Render",
-                        new ManufacturerDetails("ACME"),
+                        "我的小电视",
+                        new ManufacturerDetails("Bilibili Inc.", "https://bilibili.com/"),
                         new ModelDetails(
                                 "MediaRender2000",
-                                "A demo media render",
-                                "v1"
+                                "云视听小电视",
+                                "1024",
+                                "https://app.bilibili.com/"
                         ),
+                        "1024",
+                        null,
                         new DLNADoc[]{new DLNADoc("DMR", DLNADoc.Version.V1_5)},
                         new DLNACaps(new String[] { "av-upload", "image-upload", "audio-upload" })
                 );
@@ -315,6 +320,12 @@ public class MyMediaRender implements Runnable {
                 @Override
                 public DatagramProcessor getDatagramProcessor() {
                     return new MyDatagramProcessorImpl();
+                }
+
+
+                @Override
+                public DeviceDescriptorBinder getDeviceDescriptorBinderUDA10() {
+                    return new NvaUDA10DeviceDescriptorBinderImpl();
                 }
 
             }, listener);
