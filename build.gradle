@@ -14,6 +14,7 @@ repositories {
 }
 
 dependencies {
+    implementation group: 'io.netty', name: 'netty-all', version: '4.1.82.Final'
     implementation group: 'uk.co.caprica', name: 'vlcj', version: '4.4.4'
     implementation group: 'uk.co.caprica', name: 'vlcj-javafx', version: '1.1.0'
     implementation group: 'org.fourthline.cling', name: 'cling-core', version: '2.1.2'

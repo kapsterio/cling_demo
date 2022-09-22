@@ -46,6 +46,8 @@ import org.fourthline.cling.support.model.container.Container;
 import org.fourthline.cling.support.model.item.Item;
 import org.fourthline.cling.transport.impl.DatagramProcessorImpl;
 import org.fourthline.cling.transport.spi.DatagramProcessor;
+import org.fourthline.cling.transport.spi.NetworkAddressFactory;
+import org.fourthline.cling.transport.spi.StreamServer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -324,10 +326,14 @@ public class MyMediaRender implements Runnable {
 
 
                 @Override
-                public DeviceDescriptorBinder getDeviceDescriptorBinderUDA10() {
+                public DeviceDescriptorBinder createDeviceDescriptorBinderUDA10() {
                     return new NvaUDA10DeviceDescriptorBinderImpl();
                 }
 
+                @Override
+                public StreamServer createStreamServer(NetworkAddressFactory networkAddressFactory) {
+                    return new NvaStreamServerImpl(new NvaStreamServerConfiguration(networkAddressFactory.getStreamListenPort()));
+                }
             }, listener);
 
             Runtime.getRuntime().addShutdownHook(new Thread() {

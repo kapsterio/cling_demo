@@ -12,7 +12,12 @@ import org.fourthline.cling.model.types.DLNADoc;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class NvaUDA10DeviceDescriptorBinderImpl extends RecoveringUDA10DeviceDescriptorBinderImpl {
+
+/**
+ * extends UDA10DeviceDescriptorBinderImpl not RecoveringUDA10DeviceDescriptorBinderImpl to fix cast iqy to pure java
+ * client
+ */
+public class NvaUDA10DeviceDescriptorBinderImpl extends UDA10DeviceDescriptorBinderImpl {
     @Override
     protected void generateDevice(Namespace namespace, Device deviceModel, Document descriptor, Element rootElement, RemoteClientInfo info) {
         Element deviceElement = appendNewElement(descriptor, rootElement, Descriptor.Device.ELEMENT.device);
