@@ -14,6 +14,7 @@ repositories {
 }
 
 dependencies {
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.3'
     implementation group: 'io.netty', name: 'netty-all', version: '4.1.82.Final'
     implementation group: 'uk.co.caprica', name: 'vlcj', version: '4.4.4'

@@ -24,6 +24,9 @@ public class NvaMessage {
         return seq;
     }
 
+    public boolean hasPayload() {
+        return payload != null && !payload.isEmpty();
+    }
     public Map<String, Object> getPayload() {
         return payload;
     }

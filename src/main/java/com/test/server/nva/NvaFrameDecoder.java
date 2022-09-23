@@ -24,14 +24,13 @@ import java.util.Map;
  *
  */
 public class NvaFrameDecoder extends ByteToMessageDecoder {
+    public final static int FLAG_REQUEST = 0xe0;
+    public final static int FLAG_RESPONSE = 0xc0;
+    public final static int FLAG_PING = 0xe4;
 
     private static TypeReference<HashMap<String, Object>> typeRef
             = new TypeReference<HashMap<String, Object>>() {};
     private static ObjectMapper mapper = new ObjectMapper();
-
-    private final static int FLAG_REQUEST = 0xe0;
-    private final static int FLAG_RESPONSE = 0xc0;
-    private final static int FLAG_PING = 0xe4;
 
     private final static int STATE_INITIAL = 0;
     private final static int STATE_READ_HEADER = 1;

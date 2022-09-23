@@ -1,7 +1,11 @@
-package com.test.server;
+package com.test.server.nva;
 
+import com.test.server.MyMediaRender;
 import com.test.server.nva.NvaFrameDecoder;
-import io.netty.handler.codec.http.HttpHeaders;
+import com.test.server.nva.NvaFrameEncoder;
+import com.test.server.nva.NvaMessageHandler;
+import com.test.server.nva.NvaStreamServerConfiguration;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.fourthline.cling.model.message.Connection;
 import org.fourthline.cling.model.message.StreamRequestMessage;
 import org.fourthline.cling.model.message.StreamResponseMessage;
@@ -49,14 +53,16 @@ import io.netty.handler.codec.http.HttpVersion;
 
 public class NvaStreamServerImpl implements StreamServer<NvaStreamServerConfiguration> {
     private static final int MAX_CONTENT_LENGTH = 10 * 1024 * 1024;
-    private NvaStreamServerConfiguration configuration;
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+    private final NvaStreamServerConfiguration configuration;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 
     protected int localPort;
     protected String hostAddress;
 
     protected ChannelFuture serverFuture = null;
     protected Channel serverChannel;
+
+    private final NvaSessionManager sessionManager = new NvaSessionManager();
 
     public NvaStreamServerImpl(NvaStreamServerConfiguration configuration) {
         this.configuration = configuration;
@@ -118,29 +124,21 @@ public class NvaStreamServerImpl implements StreamServer<NvaStreamServerConfigur
         pipeline.remove(HttpObjectAggregator.class);
         pipeline.remove("upnpHandler");
         pipeline.addLast(new NvaFrameDecoder());
+        pipeline.addLast(new NvaFrameEncoder());
+        pipeline.addLast(new IdleStateHandler(120, 60, 0));
+        pipeline.addLast(new NvaMessageHandler(sessionManager));
+
+        //initialize session
+        String session = switchRequest.headers().get("Session");
+        String version = switchRequest.headers().get("NvaVersion");
+        String method = switchRequest.method().name();
+        if ("SETUP".equals(method)) {
+            sessionManager.setupSession(session, version, pipeline.channel());
+        } else if ("RESTORE".equals(method)) {
+            sessionManager.restoreSession(session, pipeline.channel());
+        }
     }
 
-    /**
-     *
-     * SETUP /projection NVA/1.0
-     * Session: {session}
-     * NvaVersion: 1
-     * Connection: Keep-Alive
-     * UUID: {device-UUID}
-     * User-Agent: Linux/3.0.0 UPnP/1.0 Platinum/1.0.5.13
-     * Host: 192.168.1.223:9958
-     *
-     * NVA/1.0 200 OK
-     * NvaVersion: 1
-     * Session: {session}
-     * Connection: Keep-Alive
-     * UUID: {device-UUID}
-     * Date: Sun, 02 Jan 2022 03:58:00 GMT
-     * Content-Length: 0
-     * Server: Linux/3.0.0, UPnP/1.0, Platinum/1.0.5.13
-     * @param switchRequest
-     * @return
-     */
     private HttpResponse generateNvaResponse(FullHttpRequest switchRequest) {
         HttpResponse response = new DefaultFullHttpResponse(switchRequest.protocolVersion(), HttpResponseStatus.OK);
         String session = switchRequest.headers().get("Session");
@@ -154,7 +152,7 @@ public class NvaStreamServerImpl implements StreamServer<NvaStreamServerConfigur
         response.headers().set("Date", date);
         response.headers().set("Server", server);
         response.headers().set("Connection", "Keep-Alive");
-        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, -1);
+        response.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
         return response;
     }
 
@@ -209,7 +207,7 @@ public class NvaStreamServerImpl implements StreamServer<NvaStreamServerConfigur
                 } else {
                     HttpResponseStatus status = HttpResponseStatus.valueOf(responseMessage.getOperation().getStatusCode());
                     httpResponse = new DefaultFullHttpResponse(version, status);
-                    httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, -1);
+                    httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, 0);
                     System.out.println("http response....." + httpResponse.status());
 
                 }

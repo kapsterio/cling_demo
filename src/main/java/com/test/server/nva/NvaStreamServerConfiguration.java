@@ -1,4 +1,4 @@
-package com.test.server;
+package com.test.server.nva;
 
 import org.fourthline.cling.transport.spi.StreamServerConfiguration;
 

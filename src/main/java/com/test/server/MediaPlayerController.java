@@ -1,6 +1,7 @@
 package com.test.server;
 
 
+import com.test.server.nva.NvaMediaController;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.Media;
 import uk.co.caprica.vlcj.media.MediaEventAdapter;
@@ -17,7 +18,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class MediaPlayerController {
+public class MediaPlayerController implements NvaMediaController {
 
     private final CallbackMediaPlayerComponent mediaPlayerComponent;
 

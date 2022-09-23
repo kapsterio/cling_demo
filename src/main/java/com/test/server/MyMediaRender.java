@@ -1,5 +1,7 @@
 package com.test.server;
 
+import com.test.server.nva.NvaStreamServerConfiguration;
+import com.test.server.nva.NvaStreamServerImpl;
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceImpl;
@@ -35,8 +37,6 @@ import org.fourthline.cling.support.connectionmanager.ConnectionManagerService;
 import org.fourthline.cling.support.contentdirectory.callback.Browse;
 import org.fourthline.cling.support.lastchange.LastChangeAwareServiceManager;
 import org.fourthline.cling.support.lastchange.LastChangeParser;
-import org.fourthline.cling.support.renderingcontrol.AbstractAudioRenderingControl;
-import org.fourthline.cling.support.renderingcontrol.lastchange.RenderingControlLastChangeParser;
 import org.fourthline.cling.support.model.BrowseFlag;
 import org.fourthline.cling.support.model.DIDLContent;
 import org.fourthline.cling.support.model.DIDLObject;
@@ -44,7 +44,6 @@ import org.fourthline.cling.support.model.DescMeta;
 import org.fourthline.cling.support.model.Res;
 import org.fourthline.cling.support.model.container.Container;
 import org.fourthline.cling.support.model.item.Item;
-import org.fourthline.cling.transport.impl.DatagramProcessorImpl;
 import org.fourthline.cling.transport.spi.DatagramProcessor;
 import org.fourthline.cling.transport.spi.NetworkAddressFactory;
 import org.fourthline.cling.transport.spi.StreamServer;
