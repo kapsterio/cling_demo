@@ -11,6 +11,15 @@ public class NvaMessage {
         this.seq = seq;
     }
 
+    public NvaMessage(int seq, Map<String, Object> payload) {
+        this.seq = seq;
+        this.payload = payload;
+    }
+
+    public void setPayload(Map<String, Object> payload) {
+        this.payload = payload;
+    }
+
     public int getSeq() {
         return seq;
     }

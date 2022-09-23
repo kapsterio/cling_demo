@@ -1,21 +1,17 @@
 package com.test.server.nva;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * 000000ED  e0 02 00 00 00 01 01 07  43 6f 6d 6d 61 6e 64 09   ........ Command.
- * 000000FD  47 65 74 56 6f 6c 75 6d  65                        GetVolum e
- *
- * 00000106  e0 03 00 00 00 02 01 07  43 6f 6d 6d 61 6e 64 04   ........ Command.
- * 00000116  50 6c 61 79 00 00 01 72  7b 22 61 75 74 6f 4e 65   Play...r {"autoNe
- * ...
- * 00000286  36 35 34 30 30 31 30 30  22 7d                     65400100 "}
- *
- *
  * request
  * 0xe0 num_of_params:1 seq:4 version:1 length_of_type:1 type: length_of_type length_of_name:1
  * name:length_of_type  [length_of_payload:4 payload:length_of_payload]
@@ -28,6 +24,11 @@ import java.util.List;
  *
  */
 public class NvaFrameDecoder extends ByteToMessageDecoder {
+
+    private static TypeReference<HashMap<String, Object>> typeRef
+            = new TypeReference<HashMap<String, Object>>() {};
+    private static ObjectMapper mapper = new ObjectMapper();
+
     private final static int FLAG_REQUEST = 0xe0;
     private final static int FLAG_RESPONSE = 0xc0;
     private final static int FLAG_PING = 0xe4;
@@ -39,15 +40,23 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
     private final static int STATE_READ_PAYLOAD_LENGTH = 4;
 
     private int state = STATE_INITIAL;
+    private int flag;
     private boolean hasPayload;
     private int numBytesToWait;
 
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("nav decoder added ..........");
+    }
+
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        System.out.println("decoding ................");
         switch (state) {
             case STATE_INITIAL:
                 in.markReaderIndex();
-                int flag = in.readByte();
+                flag = in.readByte();
                 state = STATE_READ_HEADER;
                 if ((flag & 0xff) == FLAG_REQUEST) {
                     numBytesToWait = 15;
@@ -79,6 +88,8 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
         if (in.readableBytes() < numBytesToWait) {
             return;
         }
+        System.out.println("decoding request header................");
+
         int numOfParam = in.readByte();
         if (numOfParam == 3) {
             hasPayload = true;
@@ -96,6 +107,8 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
         if (in.readableBytes() < numBytesToWait) {
             return;
         }
+        System.out.println("decoding request name................");
+
         if (hasPayload) {
             in.skipBytes(numBytesToWait - 4);
             int lengthOfPayload = in.readInt();
@@ -112,16 +125,81 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
         if (in.readableBytes() < numBytesToWait) {
             return;
         }
+        System.out.println("decoding payload................");
+
         in.skipBytes(numBytesToWait);
         readFrame(in, out);
     }
 
     private void readFrame(ByteBuf in, List<Object> out) {
+        System.out.println("decoding frame...............");
+
         int currentIndex = in.readerIndex();
         in.resetReaderIndex();
         int previousIndex = in.readerIndex();
-        out.add(in.readRetainedSlice(currentIndex - previousIndex));
+        out.add(decode(in.readRetainedSlice(currentIndex - previousIndex)));
         state = STATE_INITIAL;
+    }
+
+    private NvaMessage decode(ByteBuf frame) {
+        NvaMessage message = null;
+        try {
+            if ((flag & 0xff) == FLAG_REQUEST) {
+                message = decodeRequest(frame);
+            } else if ((flag & 0xff) == FLAG_RESPONSE) {
+                message = decodeResponse(frame);
+            } else if ((flag & 0xff) == FLAG_PING) {
+                message = decodePing(frame);
+            } else {
+                throw new RuntimeException("fail to decode frame");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (message != null) {
+            System.out.println("receive nva:" + message);
+        }
+        return message;
+    }
+
+    private NvaMessage decodeRequest(ByteBuf frame) throws Exception {
+        //flag + num_of_param
+        frame.skipBytes(2);
+        int seq = frame.readInt();
+        int version = frame.readByte();
+        //length of command + command
+        frame.skipBytes(8);
+        int lengthOfName = frame.readByte();
+        ByteBuf nameBytes = frame.readBytes(lengthOfName);
+        String name = nameBytes.toString(StandardCharsets.UTF_8);
+        Map<String, Object> payload = null;
+        if (hasPayload) {
+            int lengthOfPayload = frame.readInt();
+            ByteBuf payloadBytes = frame.readBytes(lengthOfPayload);
+            String payloadJson = payloadBytes.toString(StandardCharsets.UTF_8);
+            payload = mapper.readValue(payloadJson, typeRef);
+        }
+        return new NvaRequest(seq, payload, version, "Command", name);
+    }
+
+    private NvaMessage decodeResponse(ByteBuf frame) throws Exception {
+        //flag + num_of_param
+        frame.skipBytes(2);
+        int seq= frame.readInt();
+        Map<String, Object> payload = null;
+        if (hasPayload) {
+            int lengthOfPayload = frame.readInt();
+            ByteBuf payloadBytes = frame.readBytes(lengthOfPayload);
+            String payloadJson = payloadBytes.toString(StandardCharsets.UTF_8);
+            payload = mapper.readValue(payloadJson, typeRef);
+        }
+        return new NvaResponse(seq, payload);
+    }
+
+    private NvaMessage decodePing(ByteBuf frame) throws Exception {
+        frame.skipBytes(2);
+        int seq= frame.readInt();
+        return new NvaPing(seq);
     }
 
     private void readResponseHeader(ByteBuf in, List<Object> out) {

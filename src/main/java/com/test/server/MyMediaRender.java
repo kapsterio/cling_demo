@@ -67,12 +67,12 @@ public class MyMediaRender implements Runnable {
     private LocalService<MyAVTransportService> avService;
     private MediaPlayerController mediaPlayerController;
 
+    public static DeviceIdentity identity =  new DeviceIdentity(
+            UDN.uniqueSystemIdentifier("Demo Media Render")
+    );
+
     private  LocalDevice createDevice()
             throws ValidationException, LocalServiceBindingException, IOException {
-        DeviceIdentity identity =
-                new DeviceIdentity(
-                        UDN.uniqueSystemIdentifier("Demo Media Render")
-                );
 
         System.out.println(identity);
 
