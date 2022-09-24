@@ -1,11 +1,15 @@
 package com.test.server;
 
+import com.test.server.nva.NvaStreamServerConfiguration;
+import com.test.server.nva.NvaStreamServerImpl;
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceImpl;
 import org.fourthline.cling.binding.LocalServiceBindingException;
 import org.fourthline.cling.binding.annotations.AnnotationLocalServiceBinder;
 import org.fourthline.cling.controlpoint.ActionCallback;
+import org.fourthline.cling.binding.xml.DeviceDescriptorBinder;
+import org.fourthline.cling.binding.xml.NvaUDA10DeviceDescriptorBinderImpl;
 import org.fourthline.cling.model.DefaultServiceManager;
 import org.fourthline.cling.model.ValidationException;
 import org.fourthline.cling.model.action.ActionInvocation;
@@ -33,8 +37,6 @@ import org.fourthline.cling.support.connectionmanager.ConnectionManagerService;
 import org.fourthline.cling.support.contentdirectory.callback.Browse;
 import org.fourthline.cling.support.lastchange.LastChangeAwareServiceManager;
 import org.fourthline.cling.support.lastchange.LastChangeParser;
-import org.fourthline.cling.support.renderingcontrol.AbstractAudioRenderingControl;
-import org.fourthline.cling.support.renderingcontrol.lastchange.RenderingControlLastChangeParser;
 import org.fourthline.cling.support.model.BrowseFlag;
 import org.fourthline.cling.support.model.DIDLContent;
 import org.fourthline.cling.support.model.DIDLObject;
@@ -42,8 +44,9 @@ import org.fourthline.cling.support.model.DescMeta;
 import org.fourthline.cling.support.model.Res;
 import org.fourthline.cling.support.model.container.Container;
 import org.fourthline.cling.support.model.item.Item;
-import org.fourthline.cling.transport.impl.DatagramProcessorImpl;
 import org.fourthline.cling.transport.spi.DatagramProcessor;
+import org.fourthline.cling.transport.spi.NetworkAddressFactory;
+import org.fourthline.cling.transport.spi.StreamServer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -63,12 +66,12 @@ public class MyMediaRender implements Runnable {
     private LocalService<MyAVTransportService> avService;
     private MediaPlayerController mediaPlayerController;
 
+    public static DeviceIdentity identity =  new DeviceIdentity(
+            UDN.uniqueSystemIdentifier("Demo Media Render")
+    );
+
     private  LocalDevice createDevice()
             throws ValidationException, LocalServiceBindingException, IOException {
-        DeviceIdentity identity =
-                new DeviceIdentity(
-                        UDN.uniqueSystemIdentifier("Demo Media Render")
-                );
 
         System.out.println(identity);
 
@@ -78,13 +81,16 @@ public class MyMediaRender implements Runnable {
 
         DeviceDetails details =
                 new DeviceDetails(
-                        "My First Media Render",
-                        new ManufacturerDetails("ACME"),
+                        "我的小电视",
+                        new ManufacturerDetails("Bilibili Inc.", "https://bilibili.com/"),
                         new ModelDetails(
                                 "MediaRender2000",
-                                "A demo media render",
-                                "v1"
+                                "云视听小电视",
+                                "1024",
+                                "https://app.bilibili.com/"
                         ),
+                        "1024",
+                        null,
                         new DLNADoc[]{new DLNADoc("DMR", DLNADoc.Version.V1_5)},
                         new DLNACaps(new String[] { "av-upload", "image-upload", "audio-upload" })
                 );
@@ -317,6 +323,16 @@ public class MyMediaRender implements Runnable {
                     return new MyDatagramProcessorImpl();
                 }
 
+
+                @Override
+                public DeviceDescriptorBinder createDeviceDescriptorBinderUDA10() {
+                    return new NvaUDA10DeviceDescriptorBinderImpl();
+                }
+
+                @Override
+                public StreamServer createStreamServer(NetworkAddressFactory networkAddressFactory) {
+                    return new NvaStreamServerImpl(new NvaStreamServerConfiguration(networkAddressFactory.getStreamListenPort()));
+                }
             }, listener);
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
