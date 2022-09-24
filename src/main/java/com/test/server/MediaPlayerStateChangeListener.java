@@ -5,4 +5,7 @@ public interface MediaPlayerStateChangeListener {
     void onPlay();
     void onPause();
     void onStop();
+    default void onLoading() {
+
+    }
 }

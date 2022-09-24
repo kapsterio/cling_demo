@@ -1,10 +1,16 @@
 package com.test.server.nva.command;
 
 import com.test.server.nva.NvaSession;
+import com.test.server.nva.model.Format;
 import com.test.server.nva.model.VideoID;
 import com.test.server.nva.model.VideoInfo;
+import com.test.server.utils.MapUtil;
 import com.test.server.utils.VideoInfoLoader;
+import okhttp3.HttpUrl;
+import okhttp3.Request;
+import okhttp3.Response;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,40 +25,31 @@ import java.util.Map;
  * version=1, type='Command',
  * name='Play'}
  */
-public class Play extends CommandExecutor {
-    public Play(NvaSession session) {
+public class SwitchQn extends CommandExecutor {
+
+    public SwitchQn(NvaSession session) {
         super(session);
     }
 
 
     @Override
     public Map<String, Object> execute(Map<String, Object> payload) {
-        int cid = (Integer) payload.get("cid");
-        int aid = (Integer) payload.get("aid");
-        int epid = (Integer) payload.get("epId");
-        int seasonId = (Integer) payload.get("seasonId");
-        int contentType = (Integer) payload.get("contentType");
-        int oid = (Integer) payload.get("oid");
-        VideoID videoId = new VideoID(cid, contentType, aid, epid, seasonId, oid);
-        session.setCurrentVideoID(videoId);
-
-        int qn = (Integer) payload.get("userDesireQn");
-        session.setCurrentQn(qn);
-
-        String key = String.valueOf(payload.get("accessKey"));
-        session.setKey(key);
+        int newQn = (Integer) payload.get("qn");
+        session.setCurrentQn(newQn);
+        VideoID videoID = session.getCurrentVideoID();
 
         try {
-            VideoInfo videoInfo = VideoInfoLoader.loadVideoInfo(cid, epid, oid, qn, key);
+            VideoInfo videoInfo = VideoInfoLoader.loadVideoInfo(
+                    videoID.getCid(), videoID.getEpId(), videoID.getOid(),
+                    newQn, session.getKey());
             session.setCurrentVideoInfo(videoInfo);
             session.getController().prepare(videoInfo.getUrl());
-            Integer tsInSecond = (Integer) payload.getOrDefault("seekTs", 0);
-            session.getController().seek(tsInSecond * 1000);
+            long position = session.getController().currentPosition();
+            session.getController().seek(position);
             session.sendDanmakuState(false);
             session.sendEpisodeState();
             session.sendQnState();
             session.sendSpeedState();
-            session.triggerProgressState();
         } catch (Exception e) {
             e.printStackTrace();
         }

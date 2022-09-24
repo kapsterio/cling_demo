@@ -51,7 +51,6 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        System.out.println("decoding ................");
         switch (state) {
             case STATE_INITIAL:
                 in.markReaderIndex();
@@ -87,7 +86,6 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
         if (in.readableBytes() < numBytesToWait) {
             return;
         }
-        System.out.println("decoding request header................");
 
         int numOfParam = in.readByte();
         if (numOfParam == 3) {
@@ -106,7 +104,6 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
         if (in.readableBytes() < numBytesToWait) {
             return;
         }
-        System.out.println("decoding request name................");
 
         if (hasPayload) {
             in.skipBytes(numBytesToWait - 4);
@@ -124,14 +121,12 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
         if (in.readableBytes() < numBytesToWait) {
             return;
         }
-        System.out.println("decoding payload................");
 
         in.skipBytes(numBytesToWait);
         readFrame(in, out);
     }
 
     private void readFrame(ByteBuf in, List<Object> out) {
-        System.out.println("decoding frame...............");
 
         int currentIndex = in.readerIndex();
         in.resetReaderIndex();

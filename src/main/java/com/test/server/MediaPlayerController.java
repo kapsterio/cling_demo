@@ -2,7 +2,6 @@ package com.test.server;
 
 
 import com.test.server.nva.NvaMediaController;
-import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.media.Media;
 import uk.co.caprica.vlcj.media.MediaEventAdapter;
 import uk.co.caprica.vlcj.media.MediaParsedStatus;
@@ -10,11 +9,8 @@ import uk.co.caprica.vlcj.media.MediaRef;
 import uk.co.caprica.vlcj.media.Meta;
 import uk.co.caprica.vlcj.player.base.State;
 import uk.co.caprica.vlcj.player.component.CallbackMediaPlayerComponent;
-import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
-import uk.co.caprica.vlcj.player.embedded.videosurface.VideoSurface;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -62,6 +58,11 @@ public class MediaPlayerController implements NvaMediaController {
         mediaPlayerComponent.mediaPlayer().controls().setTime(tsInMs);
     }
 
+    @Override
+    public long currentPosition() {
+        return mediaPlayerComponent.mediaPlayer().status().time();
+    }
+
     public void prepare(String uri) {
         mediaPlayerComponent.mediaPlayer().media().play(uri);
         mediaPlayerComponent.mediaPlayer().media().parsing().parse();
@@ -90,6 +91,15 @@ public class MediaPlayerController implements NvaMediaController {
             @Override
             public void mediaStateChanged(Media media, State newState) {
                 System.out.println("state changed" + newState);
+                if (newState.equals(State.OPENING)) {
+                    listener.onLoading();
+                } else if (newState.equals(State.PLAYING)) {
+                    listener.onPlay();
+                } else if (newState.equals(State.PAUSED)) {
+                    listener.onPause();
+                } else if (newState.equals(State.STOPPED)) {
+                    listener.onStop();
+                }
             }
         });
     }

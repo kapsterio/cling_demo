@@ -125,7 +125,7 @@ public class NvaStreamServerImpl implements StreamServer<NvaStreamServerConfigur
         pipeline.remove("upnpHandler");
         pipeline.addLast(new NvaFrameDecoder());
         pipeline.addLast(new NvaFrameEncoder());
-        pipeline.addLast(new IdleStateHandler(120, 60, 0));
+        //pipeline.addLast(new IdleStateHandler(3, 1, 0));
         pipeline.addLast(new NvaMessageHandler(sessionManager));
 
         //initialize session

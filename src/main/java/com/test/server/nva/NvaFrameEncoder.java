@@ -29,7 +29,7 @@ public class NvaFrameEncoder extends MessageToByteEncoder<NvaMessage> {
         out.writeByte(FLAG_PING);
         out.writeByte(0x00);
         out.writeInt(msg.getSeq());
-        System.out.println("encode ping.... ");
+        System.out.println("encode ping.... " + msg);
     }
 
     private void encodeResponse(NvaResponse msg, ByteBuf out) throws Exception {
@@ -42,13 +42,15 @@ public class NvaFrameEncoder extends MessageToByteEncoder<NvaMessage> {
             out.writeInt(payload.length);
             out.writeBytes(payload);
         }
-        System.out.println("encode response.... ");
+        System.out.println("encode response.... " + msg);
     }
 
     private void encodeRequest(NvaRequest msg, ByteBuf out) throws Exception{
         out.writeByte(FLAG_REQUEST);
         out.writeByte(msg.hasPayload() ? 3 : 2);
         out.writeInt(msg.getSeq());
+        //version
+        out.writeByte(0x01);
         out.writeByte(7);
         out.writeBytes("Command".getBytes(StandardCharsets.UTF_8));
         byte[] name = msg.getName().getBytes(StandardCharsets.UTF_8);
@@ -60,6 +62,6 @@ public class NvaFrameEncoder extends MessageToByteEncoder<NvaMessage> {
             out.writeInt(payload.length);
             out.writeBytes(payload);
         }
-        System.out.println("encode request.... ");
+        System.out.println("encode request.... " + msg);
     }
 }

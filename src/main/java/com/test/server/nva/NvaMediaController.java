@@ -12,6 +12,6 @@ public interface NvaMediaController {
 
     void seek(long tsInMs);
 
-
+    long currentPosition();
 
 }

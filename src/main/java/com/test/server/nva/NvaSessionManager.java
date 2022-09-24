@@ -19,6 +19,7 @@ public class NvaSessionManager {
     public void restoreSession(String ssid, Channel channel) {
         NvaSession session = sessions.get(ssid);
         if (session != null) {
+            channel.attr(SSID).set(ssid);
             session.channelRestore(channel);
         } else {
             throw new RuntimeException(ssid + " not exist");
