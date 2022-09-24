@@ -131,7 +131,7 @@ public class NvaFrameDecoder extends ByteToMessageDecoder {
         int currentIndex = in.readerIndex();
         in.resetReaderIndex();
         int previousIndex = in.readerIndex();
-        out.add(decode(in.readRetainedSlice(currentIndex - previousIndex)));
+        out.add(decode(in.readSlice(currentIndex - previousIndex)));
         state = STATE_INITIAL;
     }
 

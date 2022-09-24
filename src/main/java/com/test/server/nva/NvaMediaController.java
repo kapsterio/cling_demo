@@ -14,4 +14,7 @@ public interface NvaMediaController {
 
     long currentPosition();
 
+    int currentVolume();
+
+    void setVolume(int volume);
 }

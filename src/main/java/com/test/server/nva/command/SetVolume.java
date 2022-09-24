@@ -2,18 +2,19 @@ package com.test.server.nva.command;
 
 import com.test.server.nva.NvaSession;
 
+import java.util.HashMap;
 import java.util.Map;
 
-public class Stop extends CommandExecutor {
+public class SetVolume extends CommandExecutor {
 
-    public Stop(NvaSession session) {
+    public SetVolume(NvaSession session) {
         super(session);
     }
 
     @Override
     public Map<String, Object> execute(Map<String, Object> payload) {
-        session.getController().stop();
-        session.destroy();
+        int volume = (Integer) payload.get("volume");
+        session.getController().setVolume(volume);
         return null;
     }
 }

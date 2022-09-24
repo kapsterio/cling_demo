@@ -21,6 +21,7 @@ public class VideoInfoLoader {
 
     public static VideoInfo loadVideoInfo(int cid, int epId, int oid,
                                           int qn, String key) throws Exception {
+        System.out.println("cid: "+ cid + " epId: " + epId +  " oid: " + oid + " qn: " + qn + " key: " + key);
         int objectId = epId == 0 ? oid : epId;
         int playUrlType = epId == 0 ? 1 : 2;
         HttpUrl url = new HttpUrl.Builder()
@@ -57,6 +58,10 @@ public class VideoInfoLoader {
     }
 
     private static VideoInfo parseVideoInfo(Map<String, Object> result) {
+        if (!result.get("code").equals(0)) {
+            System.out.println("fail to parse video info .........");
+            return null;
+        }
         String format = MapUtil.get(result, "data", "format");
         Integer duration = MapUtil.get(result, "data", "timelength");
         Integer quality = MapUtil.get(result, "data", "quality");

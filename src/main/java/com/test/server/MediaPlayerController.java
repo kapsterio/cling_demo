@@ -52,6 +52,8 @@ public class MediaPlayerController implements NvaMediaController {
 
     public void stop() {
         mediaPlayerComponent.mediaPlayer().controls().stop();
+        mediaPlayerComponent.release();
+        frame.dispose();
     }
 
     public void seek(long tsInMs) {
@@ -61,6 +63,22 @@ public class MediaPlayerController implements NvaMediaController {
     @Override
     public long currentPosition() {
         return mediaPlayerComponent.mediaPlayer().status().time();
+    }
+
+    @Override
+    public int currentVolume() {
+        int volume = mediaPlayerComponent.mediaPlayer().audio().volume();
+        if (volume < 0) {
+            return 50;
+        } else {
+            return volume / 2;
+        }
+    }
+
+    @Override
+    public void setVolume(int volume) {
+        int actualVolume = volume * 2;
+        mediaPlayerComponent.mediaPlayer().audio().setVolume(actualVolume);
     }
 
     public void prepare(String uri) {

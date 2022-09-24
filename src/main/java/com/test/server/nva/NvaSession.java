@@ -3,10 +3,12 @@ package com.test.server.nva;
 import com.test.server.MediaPlayerController;
 import com.test.server.MediaPlayerStateChangeListener;
 import com.test.server.nva.command.CommandExecutor;
+import com.test.server.nva.command.GetVolume;
 import com.test.server.nva.command.Pause;
 import com.test.server.nva.command.Play;
 import com.test.server.nva.command.Resume;
 import com.test.server.nva.command.Seek;
+import com.test.server.nva.command.SetVolume;
 import com.test.server.nva.command.Stop;
 import com.test.server.nva.command.SwitchQn;
 import com.test.server.nva.model.Format;
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class NvaSession {
+    private static ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
     private static final String TYPE_COMMAND = "Command";
     private String ssid;
     private String version;
@@ -41,8 +44,6 @@ public class NvaSession {
     private int currentQn;
     private String key;
     private VideoID currentVideoID;
-
-    private ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
 
     private ScheduledFuture progressTrigger = null;
 
@@ -77,25 +78,11 @@ public class NvaSession {
                 sendPlayStateChange(3);
             }
         });
-        initializeCommands(controller);
+        initializeCommands();
     }
 
-    /**
-     *             case "Play":
-     *             case "PlayUrl":
-     *             case "Pause":
-     *             case "Resume":
-     *             case "Stop":
-     *             case "Seek":
-     *             case "SwitchDanmaku":
-     *             case "SwitchSpeed":
-     *             case "SwitchQn":
-     *             case "GetTVInfo":
-     *             case "GetVolume":
-     * @param mediaController
-     * @return
-     */
-    private void initializeCommands(NvaMediaController mediaController) {
+
+    private void initializeCommands() {
         System.out.println("init commands ........................");
         supportedCommands = new HashMap<>();
         supportedCommands.put("Play", new Play(this));
@@ -104,6 +91,8 @@ public class NvaSession {
         supportedCommands.put("Seek", new Seek(this));
         supportedCommands.put("Stop", new Stop(this));
         supportedCommands.put("SwitchQn", new SwitchQn(this));
+        supportedCommands.put("SetVolume", new SetVolume(this));
+        supportedCommands.put("GetVolume", new GetVolume(this));
         //todo
     }
 
@@ -113,10 +102,6 @@ public class NvaSession {
 
     public String getVersion() {
         return version;
-    }
-
-    public int getCurrentSeq() {
-        return currentSeq;
     }
 
     public String getKey() {
@@ -155,9 +140,6 @@ public class NvaSession {
         this.currentVideoID = currentVideoID;
     }
 
-    public void setChannel(Channel channel) {
-        this.channel = channel;
-    }
 
     public void channelRestore(Channel channel) {
         this.channel = channel;
@@ -262,7 +244,9 @@ public class NvaSession {
     }
 
     public void triggerProgressState() {
-        progressTrigger = this.executorService.scheduleAtFixedRate(this::sendProgressState, 1, 1, TimeUnit.SECONDS);
+        if (progressTrigger == null) {
+            progressTrigger = this.executorService.scheduleAtFixedRate(this::sendProgressState, 1, 1, TimeUnit.SECONDS);
+        }
     }
 
     public void cancelProgressTrigger() {
@@ -274,5 +258,10 @@ public class NvaSession {
     public void channelDown() {
         channel = null;
         cancelProgressTrigger();
+    }
+
+    public void destroy() {
+        channel.close();
+        pendingMessages.clear();
     }
 }
